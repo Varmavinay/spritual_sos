@@ -1,0 +1,17 @@
+{
+  "name": "divine-quotes-push",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "db:init": "wrangler d1 execute divine-quotes-push --remote --file=schema.sql",
+    "db:init:local": "wrangler d1 execute divine-quotes-push --local --file=schema.sql",
+    "vapid": "node scripts/generate-vapid.mjs",
+    "test": "node --test test/"
+  },
+  "devDependencies": {
+    "http_ece": "^1.2.0",
+    "wrangler": "^4.0.0"
+  }
+}

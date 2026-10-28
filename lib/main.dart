@@ -10,17 +10,12 @@ Future<void> main() async {
   final settings = await SettingsStore.load();
   final notifications = NotificationService(settings);
   await notifications.init();
-  runApp(DivineQuotesApp(settings: settings, notifications: notifications));
+  runApp(DivineQuotesApp(notifications: notifications));
 }
 
 class DivineQuotesApp extends StatelessWidget {
-  const DivineQuotesApp({
-    super.key,
-    required this.settings,
-    required this.notifications,
-  });
+  const DivineQuotesApp({super.key, required this.notifications});
 
-  final SettingsStore settings;
   final NotificationService notifications;
 
   @override
@@ -30,7 +25,7 @@ class DivineQuotesApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: lightTheme,
       darkTheme: darkTheme,
-      home: HomeScreen(settings: settings, notifications: notifications),
+      home: HomeScreen(notifications: notifications),
     );
   }
 }

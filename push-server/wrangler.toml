@@ -1,0 +1,19 @@
+name = "divine-quotes-push"
+main = "src/index.js"
+compatibility_date = "2026-10-01"
+
+# Check for due reminders every minute.
+[triggers]
+crons = ["* * * * *"]
+
+[vars]
+ALLOWED_ORIGINS = "https://varmavinay.github.io"
+APP_URL = "https://varmavinay.github.io/spritual_sos/"
+VAPID_SUBJECT = "https://varmavinay.github.io/spritual_sos/"
+# From `npm run vapid` (public key only; the private key is a secret).
+VAPID_PUBLIC_KEY = "BEMaJHZ7h7G1IC0zFO5IQLkklyr0cUS45GdGLTkmL8cKpQ-Ar2hQtSHBWXD5s4LLikuyl2uSwYZ3jnfydHXad8M"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "divine-quotes-push"
+database_id = "73cc4b90-0e17-4c7a-89ee-1aca904f0a6f"

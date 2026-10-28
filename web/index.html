@@ -20,10 +20,12 @@
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
   <meta name="description" content="Daily inspiring and motivational quotes from the Bible, Bhagavad Gita, and Quran.">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <meta name="theme-color" content="#6750A4">
+  <meta name="theme-color" content="#FEF7FF" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#141218" media="(prefers-color-scheme: dark)">
 
-  <!-- iOS meta tags & icons -->
+  <!-- iOS: open full screen when added to the Home Screen (needed for Web Push on iPhone). -->
   <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="Divine Quotes">
   <link rel="apple-touch-icon" href="icons/Icon-192.png">
@@ -33,16 +35,34 @@
 
   <title>Divine Quotes - Sacred Wisdom</title>
   <link rel="manifest" href="manifest.json">
+
+  <style>
+    /* Matches the app background so there is no white flash while loading. */
+    html, body { margin: 0; height: 100%; background: #FEF7FF; }
+    @media (prefers-color-scheme: dark) { html, body { background: #141218; } }
+    #loading {
+      position: fixed; inset: 0; display: flex; align-items: center; justify-content: center;
+      font: 600 15px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      color: #6750A4; letter-spacing: 0.4px;
+    }
+    #loading img { width: 72px; height: 72px; border-radius: 18px; display: block; margin: 0 auto 14px; }
+    @media (prefers-color-scheme: dark) { #loading { color: #D0BCFF; } }
+  </style>
 </head>
 <body>
-  <!--
-    You can customize the "flutter_bootstrap.js" script.
-    This is useful to provide a custom configuration to the Flutter loader
-    or to give the user feedback during the initialization process.
+  <div id="loading"><div><img src="icons/Icon-192.png" alt="">Sacred Wisdom</div></div>
 
-    For more details:
-    * https://docs.flutter.dev/platform-integration/web/initialization
-  -->
+  <script>
+    // Push notifications + offline support (see web/push_sw.js).
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('push_sw.js').catch((e) => console.warn('SW registration failed', e));
+      // Remove the worker left behind by the previous version's notifications plugin.
+      navigator.serviceWorker.getRegistrations().then((regs) => regs
+        .filter((r) => (r.active || r.waiting || r.installing)?.scriptURL.includes('flutter_local_notifications_web'))
+        .forEach((r) => r.unregister()));
+    }
+    window.addEventListener('flutter-first-frame', () => document.getElementById('loading')?.remove());
+  </script>
   <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>

@@ -1,6 +1,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <!-- Daily quote notifications: re-schedule after the device restarts. -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
+    <!-- Deliver reminders on the exact minute (the user can allow this in
+         Settings > Apps > Special access > Alarms & reminders). -->
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM"/>
 
     <application
         android:label="Divine Quotes"

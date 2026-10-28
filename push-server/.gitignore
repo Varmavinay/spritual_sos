@@ -1,0 +1,5 @@
+node_modules/
+.wrangler/
+# Secrets: never commit.
+.dev.vars
+.vapid-private.json
