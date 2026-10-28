@@ -14,8 +14,9 @@ void main() {
         'id': q.id,
         'text': q.text,
         'citation': q.citation,
+        'book': q.source.name,
         'source': q.source.displayName,
-        'emoji': q.source.emoji,
+        'from': q.source.withArticle,
       },
   ]);
   File('push-server/src/quotes.json').writeAsStringSync('$json\n');

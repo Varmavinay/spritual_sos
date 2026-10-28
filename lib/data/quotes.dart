@@ -87,3 +87,32 @@ Quote randomQuote({ScriptureSource? source, Quote? excluding}) {
   }
   return pool[_random.nextInt(pool.length)];
 }
+
+final Map<int, Quote> _byId = {for (final q in allQuotes) q.id: q};
+
+Quote? quoteById(int id) => _byId[id];
+
+/// The same quote all day, a different one each day.
+Quote dailyQuote(DateTime day, {ScriptureSource? source}) {
+  final pool = quotesBySource(source);
+  final days = DateTime.utc(day.year, day.month, day.day)
+          .millisecondsSinceEpoch ~/
+      Duration.millisecondsPerDay;
+  // Step through the list by a stride coprime with its length, so
+  // neighbouring days are not neighbouring quotes.
+  return pool[(days * 7) % pool.length];
+}
+
+const _reflectionPrompts = [
+  'What is one small step I can take today to live this out?',
+  'Where in my life do I need to hear these words right now?',
+  'What would change if I truly believed this today?',
+  'Who could I share this peace with today?',
+  'What am I holding on to that I could gently let go of?',
+  'When did I last feel this to be true?',
+  'What is one thing I am grateful for in this moment?',
+];
+
+/// A journaling question shown with [quote].
+String reflectionPrompt(Quote quote) =>
+    _reflectionPrompts[quote.id % _reflectionPrompts.length];

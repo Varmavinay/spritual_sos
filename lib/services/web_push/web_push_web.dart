@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:web/web.dart' as web;
 
+import '../../models/quote.dart';
 import '../reminder_types.dart';
 
 /// URL of the push server in push-server/ (a Cloudflare Worker).
@@ -23,6 +24,9 @@ const pushServerUrl = String.fromEnvironment(
 /// subscription is registered with the push server, which sends the quote at
 /// the chosen time even when the site is closed. On iPhone this needs iOS
 /// 16.4+ and the site added to the Home Screen.
+///
+/// The service worker (web/push_sw.js) records every reminder it shows in
+/// IndexedDB (web/history_db.js), which [deliveries] reads for the history.
 class WebPush {
   ReminderAvailability get availability {
     if (_isIos && !_isStandalone) return ReminderAvailability.needsHomeScreen;
@@ -37,7 +41,7 @@ class WebPush {
   /// Asks for permission, subscribes this browser and registers it with the
   /// push server. Call straight from a tap: Safari only shows the permission
   /// prompt during a user gesture, so it is requested before any `await`.
-  Future<PermissionResult> enable(TimeOfDay time) async {
+  Future<PermissionResult> enable(TimeOfDay time, ScriptureSource? source) async {
     if (availability != ReminderAvailability.available) {
       return PermissionResult.unsupported;
     }
@@ -58,7 +62,7 @@ class WebPush {
             ))
             .toDart;
       }
-      final ok = await _register(subscription, time);
+      final ok = await _register(subscription, time, source);
       return ok ? PermissionResult.granted : PermissionResult.serverError;
     } catch (e) {
       debugPrint('Web Push subscribe failed: $e');
@@ -66,14 +70,15 @@ class WebPush {
     }
   }
 
-  /// Re-sends the existing subscription (new time, new time zone, or simply
-  /// making sure the server still has it). Returns false if not subscribed.
-  Future<bool> sync(TimeOfDay time) async {
+  /// Re-sends the existing subscription (new time or holy book, new time
+  /// zone, or simply making sure the server still has it). Returns false if
+  /// not subscribed.
+  Future<bool> sync(TimeOfDay time, ScriptureSource? source) async {
     try {
       if (web.Notification.permission != 'granted') return false;
       final subscription = await _currentSubscription();
       if (subscription == null) return false;
-      return await _register(subscription, time);
+      return await _register(subscription, time, source);
     } catch (e) {
       debugPrint('Web Push sync failed: $e');
       return false;
@@ -105,6 +110,68 @@ class WebPush {
     }
   }
 
+  /// Reminders the service worker has shown on this browser.
+  Future<List<({int id, int at})>> deliveries() async {
+    try {
+      final history = globalContext.getProperty<JSObject?>('sosHistory'.toJS);
+      if (history == null) return const [];
+      final raw = await history
+          .callMethod<JSPromise<JSString>>('listJson'.toJS)
+          .toDart;
+      return [
+        for (final item in jsonDecode(raw.toDart) as List)
+          if (item case {'id': final int id, 'at': final num at})
+            (id: id, at: at.toInt()),
+      ];
+    } catch (e) {
+      debugPrint('Reading reminder history failed: $e');
+      return const [];
+    }
+  }
+
+  /// The quote to open when the site was opened from a notification
+  /// (`?quote=<id>`). Removes it from the address bar so a reload does not
+  /// open it again.
+  int? takeLaunchQuoteId() {
+    final id = int.tryParse(Uri.base.queryParameters['quote'] ?? '');
+    if (id != null) {
+      final url = Uri.base.replace(queryParameters: {
+        ...Uri.base.queryParameters,
+      }..remove('quote'));
+      final clean = url.toString().replaceFirst(RegExp(r'\?$'), '');
+      web.window.history.replaceState(null, '', clean);
+    }
+    return id;
+  }
+
+  /// Messages from the service worker: a notification was tapped while the
+  /// site was already open, or a new reminder arrived.
+  void listen({
+    required void Function(int id) onOpenQuote,
+    required VoidCallback onDelivered,
+  }) {
+    if (!web.window.navigator.has('serviceWorker')) return;
+    web.window.navigator.serviceWorker.addEventListener(
+      'message',
+      ((web.MessageEvent event) {
+        final data = event.data;
+        if (data == null || !data.isA<JSObject>()) return;
+        final message = data as JSObject;
+        final type = message.getProperty<JSAny?>('type'.toJS);
+        if (type == null || !type.isA<JSString>()) return;
+        switch ((type as JSString).toDart) {
+          case 'open-quote':
+            final id = message.getProperty<JSAny?>('id'.toJS);
+            if (id != null && id.isA<JSNumber>()) {
+              onOpenQuote((id as JSNumber).toDartInt);
+            }
+          case 'delivered':
+            onDelivered();
+        }
+      }).toJS,
+    );
+  }
+
   Future<web.PushSubscription?> _currentSubscription() async {
     if (availability != ReminderAvailability.available) return null;
     final registration = await _registration();
@@ -125,7 +192,8 @@ class WebPush {
     return base64Url.decode(base64Url.normalize(key));
   }
 
-  Future<bool> _register(web.PushSubscription subscription, TimeOfDay time) async {
+  Future<bool> _register(web.PushSubscription subscription, TimeOfDay time,
+      ScriptureSource? source) async {
     final response = await http.post(
       Uri.parse('$pushServerUrl/subscribe'),
       headers: {'Content-Type': 'application/json'},
@@ -140,6 +208,7 @@ class WebPush {
         'hour': time.hour,
         'minute': time.minute,
         'timeZone': _timeZone(),
+        'source': source?.name ?? 'all',
       }),
     );
     if (response.statusCode != 200) {

@@ -6,6 +6,7 @@ CREATE TABLE IF NOT EXISTS subscriptions (
   hour         INTEGER NOT NULL,   -- reminder time, local to `timezone`
   minute       INTEGER NOT NULL,
   timezone     TEXT NOT NULL,      -- IANA zone, e.g. "Australia/Sydney"
+  book         TEXT NOT NULL DEFAULT 'all', -- all, bible, gita or quran
   next_send_at INTEGER NOT NULL,   -- unix ms of the next reminder
   updated_at   INTEGER NOT NULL
 );

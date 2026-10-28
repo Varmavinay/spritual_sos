@@ -1,10 +1,12 @@
-// Divine Quotes push server (Cloudflare Worker).
+// Spiritual SOS push server (Cloudflare Worker).
 //
 //   GET  /vapid-public-key   -> { publicKey }
-//   POST /subscribe          { subscription, hour, minute, timeZone }
+//   POST /subscribe          { subscription, hour, minute, timeZone, source? }
+//                            source: "all" (default), "bible", "gita" or "quran"
 //   POST /unsubscribe        { endpoint }
 //   cron (every minute)      sends a quote to every subscription that is due
 import quotes from './quotes.json';
+import { BOOKS, pickQuote } from './quotes.js';
 import { isValidTimeZone, nextSendAt } from './time.js';
 import { sendPush } from './webpush.js';
 
@@ -60,22 +62,19 @@ function vapidConfig(env) {
   };
 }
 
-function randomQuote() {
-  return quotes[Math.floor(Math.random() * quotes.length)];
-}
-
 async function handleSubscribe(request, env) {
   const body = await request.json().catch(() => null);
   const sub = body?.subscription;
-  const { hour, minute, timeZone } = body ?? {};
+  const { hour, minute, timeZone, source = 'all' } = body ?? {};
   if (
     !sub || typeof sub.endpoint !== 'string' ||
     typeof sub.keys?.p256dh !== 'string' || typeof sub.keys?.auth !== 'string' ||
     !Number.isInteger(hour) || hour < 0 || hour > 23 ||
     !Number.isInteger(minute) || minute < 0 || minute > 59 ||
-    typeof timeZone !== 'string' || !isValidTimeZone(timeZone)
+    typeof timeZone !== 'string' || !isValidTimeZone(timeZone) ||
+    !BOOKS.includes(source)
   ) {
-    return { status: 400, data: { error: 'Invalid subscription, time or time zone' } };
+    return { status: 400, data: { error: 'Invalid subscription, time, time zone or source' } };
   }
   if (!isAllowedEndpoint(sub.endpoint, env)) {
     return { status: 400, data: { error: 'Unsupported push service' } };
@@ -84,12 +83,12 @@ async function handleSubscribe(request, env) {
   const now = Date.now();
   const next = nextSendAt(hour, minute, timeZone, now);
   await env.DB.prepare(
-    `INSERT INTO subscriptions (endpoint, p256dh, auth, hour, minute, timezone, next_send_at, updated_at)
-     VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)
+    `INSERT INTO subscriptions (endpoint, p256dh, auth, hour, minute, timezone, next_send_at, updated_at, book)
+     VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)
      ON CONFLICT (endpoint) DO UPDATE SET
        p256dh = ?2, auth = ?3, hour = ?4, minute = ?5, timezone = ?6,
-       next_send_at = ?7, updated_at = ?8`,
-  ).bind(sub.endpoint, sub.keys.p256dh, sub.keys.auth, hour, minute, timeZone, next, now).run();
+       next_send_at = ?7, updated_at = ?8, book = ?9`,
+  ).bind(sub.endpoint, sub.keys.p256dh, sub.keys.auth, hour, minute, timeZone, next, now, source).run();
   return { status: 200, data: { ok: true, nextSendAt: next } };
 }
 
@@ -115,15 +114,17 @@ export async function sendDueReminders(env, now = Date.now()) {
   let failed = 0;
 
   await Promise.all(results.map(async (row) => {
-    const quote = randomQuote();
+    const quote = pickQuote(quotes, row.book);
     let status;
     try {
       status = await sendPush(
         { endpoint: row.endpoint, p256dh: row.p256dh, auth: row.auth },
         {
-          title: `${quote.emoji} ${quote.source}`,
+          id: quote.id,
+          title: `From ${quote.from}`,
           body: `“${quote.text}”\n— ${quote.citation}`,
-          url: env.APP_URL,
+          // Opens the message in the app (see takeLaunchQuoteId in the app).
+          url: `${env.APP_URL}?quote=${quote.id}`,
         },
         vapid,
       );
@@ -171,7 +172,7 @@ export default {
         return json(data, status, cors);
       }
       if (request.method === 'GET' && pathname === '/') {
-        return json({ ok: true, service: 'divine-quotes-push' }, 200, cors);
+        return json({ ok: true, service: 'spiritual-sos-push' }, 200, cors);
       }
       return json({ error: 'Not found' }, 404, cors);
     } catch (error) {

@@ -29,17 +29,18 @@ flutter:
   assets:
     - assets/icon/icon.png
 
-# Regenerate app icons with: dart run flutter_launcher_icons
+# Regenerate app icons with:
+#   flutter test tool/render_icon_test.dart && dart run flutter_launcher_icons
 flutter_launcher_icons:
   image_path: assets/icon/icon.png
   android: true
-  adaptive_icon_background: "#6750A4"
-  adaptive_icon_foreground: assets/icon/icon.png
+  adaptive_icon_background: "#F6EFE6"
+  adaptive_icon_foreground: assets/icon/foreground.png
   ios: true
   remove_alpha_ios: true
-  background_color_ios: "#6750A4"
+  background_color_ios: "#F6EFE6"
   web:
     generate: true
     image_path: assets/icon/icon.png
-    background_color: "#FEF7FF"
-    theme_color: "#6750A4"
+    background_color: "#F6EFE6"
+    theme_color: "#F6EFE6"

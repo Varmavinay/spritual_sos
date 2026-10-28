@@ -1,9 +1,11 @@
-// Service worker for the Divine Quotes website.
-//  - Shows the daily quote pushed by the push server (push-server/).
-//  - Opens / focuses the app when a notification is tapped.
+// Service worker for the Spiritual SOS website.
+//  - Shows the daily message pushed by the push server (push-server/) and
+//    records it in the history (history_db.js).
+//  - Opens the message in the app when a notification is tapped.
 //  - Keeps a network-first cache so the app still opens offline.
+importScripts('history_db.js');
 
-const CACHE = 'divine-quotes-v2';
+const CACHE = 'spiritual-sos-v3';
 
 self.addEventListener('install', () => self.skipWaiting());
 
@@ -23,24 +25,35 @@ self.addEventListener('push', (event) => {
     data = { body: event.data ? event.data.text() : '' };
   }
   const scope = self.registration.scope;
-  event.waitUntil(
-    self.registration.showNotification(data.title || 'Divine Quotes', {
-      body: data.body || 'Your daily quote is here.',
+  const id = Number.isInteger(data.id) ? data.id : null;
+  event.waitUntil((async () => {
+    await self.registration.showNotification(data.title || 'Spiritual SOS', {
+      body: data.body || 'Your daily message is here.',
       icon: `${scope}icons/Icon-192.png`,
       badge: `${scope}icons/Icon-192.png`,
       tag: 'daily-quote',
-      data: { url: data.url || scope },
-    }),
-  );
+      data: { url: data.url || scope, id },
+    });
+    if (id === null) return;
+    try {
+      await self.sosHistory.add(id);
+    } catch (error) {
+      console.warn('Could not record message', error);
+    }
+    // Let an open app show it in the history straight away.
+    const windows = await self.clients.matchAll({ type: 'window' });
+    windows.forEach((client) => client.postMessage({ type: 'delivered' }));
+  })());
 });
 
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
-  const url = (event.notification.data && event.notification.data.url) || self.registration.scope;
+  const { url = self.registration.scope, id = null } = event.notification.data || {};
   event.waitUntil((async () => {
     const windows = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
     for (const client of windows) {
       if (client.url.startsWith(self.registration.scope) && 'focus' in client) {
+        if (id !== null) client.postMessage({ type: 'open-quote', id });
         return client.focus();
       }
     }

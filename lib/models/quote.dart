@@ -1,19 +1,29 @@
 enum ScriptureSource {
-  bible('Bible', '✝️'),
-  gita('Bhagavad Gita', '🕉️'),
-  quran('Quran', '☪️');
+  bible('Bible', 'the Bible'),
+  gita('Bhagavad Gita', 'the Bhagavad Gita'),
+  quran('Quran', 'the Quran');
 
-  const ScriptureSource(this.displayName, this.emoji);
+  const ScriptureSource(this.displayName, this.withArticle);
 
   final String displayName;
-  final String emoji;
 
-  /// Short label used on the filter chips.
-  String get chipLabel => switch (this) {
+  /// For sentences such as "From the Bhagavad Gita".
+  final String withArticle;
+
+  /// Short label used on tabs.
+  String get shortLabel => switch (this) {
         ScriptureSource.bible => 'Bible',
         ScriptureSource.gita => 'Gita',
         ScriptureSource.quran => 'Quran',
       };
+
+  /// Parses [name]; anything else (including "all") means every scripture.
+  static ScriptureSource? fromName(String? name) {
+    for (final source in values) {
+      if (source.name == name) return source;
+    }
+    return null;
+  }
 }
 
 class Quote {
@@ -31,5 +41,5 @@ class Quote {
 
   /// Text used for sharing and copying to the clipboard.
   String get shareText =>
-      '"$text"\n— $citation\n\n${source.emoji} ${source.displayName}';
+      '“$text”\n— $citation, ${source.displayName}\n\nShared from Spiritual SOS';
 }

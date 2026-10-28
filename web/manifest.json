@@ -1,11 +1,11 @@
 {
-    "name": "Divine Quotes - Sacred Wisdom",
-    "short_name": "Divine Quotes",
+    "name": "Spiritual SOS",
+    "short_name": "Spiritual SOS",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#FEF7FF",
-    "theme_color": "#6750A4",
-    "description": "Daily motivational quotes from the Bible, Bhagavad Gita, and Quran",
+    "background_color": "#F6EFE6",
+    "theme_color": "#F6EFE6",
+    "description": "Small words. A little more light. A daily message from the Bible, the Bhagavad Gita and the Quran.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "categories": [
