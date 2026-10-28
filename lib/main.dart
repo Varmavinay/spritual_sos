@@ -9,8 +9,10 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   final settings = await SettingsStore.load();
   final notifications = NotificationService(settings);
-  await notifications.init();
   runApp(DivineQuotesApp(notifications: notifications));
+  // Set up reminders after the first frame so they never delay start-up
+  // (time-zone data, scheduling, or waiting for the browser's service worker).
+  notifications.init();
 }
 
 class DivineQuotesApp extends StatelessWidget {

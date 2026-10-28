@@ -22,6 +22,8 @@ jobs:
       - uses: subosito/flutter-action@v2
         with:
           channel: stable
+          # Match the local SDK so the live build behaves like local builds.
+          flutter-version: 3.47.5
           cache: true
       - run: flutter pub get
       - run: flutter test

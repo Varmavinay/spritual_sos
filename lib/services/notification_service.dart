@@ -31,6 +31,7 @@ class NotificationService extends ChangeNotifier {
       FlutterLocalNotificationsPlugin();
 
   bool _mobileReady = false;
+  Future<void>? _initFuture;
 
   bool get _isMobile =>
       !kIsWeb &&
@@ -47,13 +48,21 @@ class NotificationService extends ChangeNotifier {
   bool get enabled => _settings.notificationsEnabled;
   TimeOfDay get time => _settings.notificationTime;
 
-  Future<void> init() async {
+  /// Runs after the app is on screen; listeners are told if the saved
+  /// reminder state changes. Safe to call more than once.
+  Future<void> init() => _initFuture ??= _init();
+
+  /// Mobile actions wait for [init] in case the user taps before it is done.
+  Future<void> get _mobileInitDone => _initFuture ?? init();
+
+  Future<void> _init() async {
     if (kIsWeb) {
       if (!enabled) return;
       // Keep the saved setting honest: the user may have revoked permission
       // or the browser may have dropped the subscription.
       if (!await _webPush.isSubscribed()) {
         await _settings.setNotificationsEnabled(false);
+        notifyListeners();
         return;
       }
       _webPush.sync(time); // Refresh time zone; no need to wait.
@@ -98,8 +107,9 @@ class NotificationService extends ChangeNotifier {
     notifyListeners();
     if (kIsWeb) {
       await _webPush.disable();
-    } else if (_mobileReady) {
-      await _plugin.cancelAll();
+    } else {
+      await _mobileInitDone;
+      if (_mobileReady) await _plugin.cancelAll();
     }
   }
 
@@ -110,12 +120,15 @@ class NotificationService extends ChangeNotifier {
     notifyListeners();
     if (!enabled) return true;
     if (kIsWeb) return _webPush.sync(value);
+    await _mobileInitDone;
     await _scheduleMobile();
     return true;
   }
 
   Future<PermissionResult> _enableMobile() async {
-    if (!_isMobile || !_mobileReady) return PermissionResult.unsupported;
+    if (!_isMobile) return PermissionResult.unsupported;
+    await _mobileInitDone;
+    if (!_mobileReady) return PermissionResult.unsupported;
     bool? granted;
     if (defaultTargetPlatform == TargetPlatform.android) {
       final android = _plugin.resolvePlatformSpecificImplementation<
