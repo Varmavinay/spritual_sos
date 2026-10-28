@@ -11,6 +11,7 @@ Live website: https://varmavinay.github.io/spritual_sos/
 ## ✨ Features
 
 - **Welcome screen** on first launch, then three tabs: **Home**, **History** and **Profile**, plus a side menu.
+- **Full desktop website** on screens 960 px and wider: a top navigation bar, today's message set large beside an illustration, reflection and daily-message panels, a section for each holy book, multi-column History and Profile pages, and a footer. Phones and tablets get the app layout.
 - **Today's message:** one verse a day (or the one your daily notification brought). Filter by **All / Bible / Gita / Quran**, swipe the card or tap **Show another message** for more.
 - **Message page:** the full verse with its citation, **Save** (bookmark), **Share**, and a **Reflection** prompt with a note you can write. Notes stay on the device.
 - **Save** messages you love. Saved messages are kept on this device and listed under **History → Saved**.
@@ -20,7 +21,7 @@ Live website: https://varmavinay.github.io/spritual_sos/
   - **Android / iOS apps:** scheduled with the OS for the next 30 days, each with a different quote, and topped up each time the app opens. On Android, reminders arrive on the exact minute when "Alarms & reminders" is allowed.
   - **Website:** uses **Web Push** through the small push server in [`push-server/`](push-server/), so messages arrive even when the site is closed. The service worker records each one for the history.
   - **iPhone / iPad website:** needs **iOS 16.4+** and the site **added to the Home Screen** (Share → Add to Home Screen). The app shows these steps when opened in Safari.
-- **Works offline** on the web after the first visit.
+- **Works offline** on the web after the first visit, and a new release shows the next time the site is opened.
 - **Light & dark theme** (warm paper and terracotta) that follows the system setting.
 
 Everything personal (name, saved messages, reflections, history) is stored only on the device. The push server only knows a browser's push address, its reminder time, time zone and chosen holy book.
@@ -137,16 +138,18 @@ lib/
 │   ├── notification_service.dart     # Daily messages (mobile + web) and history
 │   ├── reminder_types.dart
 │   └── web_push/                     # Web Push client (web) + stub (mobile)
-├── screens/
+├── screens/                          # Phone layout, plus the desktop website
 │   ├── welcome_screen.dart
-│   ├── app_shell.dart                # Tabs, bottom bar, side menu
-│   ├── home_tab.dart                 # Today's message card
+│   ├── app_shell.dart                # Phone tabs + side menu, desktop top bar
+│   ├── home_tab.dart                 # Today's message card (phone)
+│   ├── desktop_home.dart             # Home page of the desktop website
 │   ├── history_tab.dart              # Received / Saved
 │   ├── profile_tab.dart              # Name, counts, settings
 │   └── message_screen.dart           # Full message + reflection
 └── widgets/
     ├── common.dart                   # Header, cards, buttons, sharing
     ├── illustrations.dart            # Leaves, book, hills, quote marks (drawn in code)
+    ├── reflection_box.dart           # Reflection prompt + note
     └── reminder_sheet.dart           # Time + holy book picker, iPhone help
 web/push_sw.js                        # Service worker: push, notification taps, offline
 web/history_db.js                     # Received-message history (IndexedDB)

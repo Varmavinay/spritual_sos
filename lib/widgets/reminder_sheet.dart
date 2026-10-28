@@ -7,14 +7,32 @@ import '../theme.dart';
 import 'common.dart';
 
 /// Opens the daily-message settings: the time, and which holy book the
-/// message comes from.
-Future<void> showReminderSheet(BuildContext context) => showModalBottomSheet(
+/// message comes from. A bottom sheet on phones, a dialog on desktop.
+Future<void> showReminderSheet(BuildContext context) {
+  if (isDesktop(context)) {
+    return showDialog(
       context: context,
-      isScrollControlled: true,
-      useSafeArea: true,
-      constraints: const BoxConstraints(maxWidth: 600),
-      builder: (_) => const _ReminderSheet(),
+      builder: (_) => Dialog(
+        insetPadding: const EdgeInsets.all(32),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 520),
+          child: const Padding(
+            padding: EdgeInsets.only(top: 28),
+            child: _ReminderSheet(),
+          ),
+        ),
+      ),
     );
+  }
+  return showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    useSafeArea: true,
+    constraints: const BoxConstraints(maxWidth: 600),
+    builder: (_) => const _ReminderSheet(),
+  );
+}
 
 /// One-line summary such as "7:00 AM · Bhagavad Gita".
 String reminderSummary(BuildContext context, NotificationService service) {

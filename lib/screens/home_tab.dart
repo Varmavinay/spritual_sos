@@ -21,38 +21,51 @@ class HomeTab extends StatefulWidget {
   State<HomeTab> createState() => _HomeTabState();
 }
 
-class _HomeTabState extends State<HomeTab> {
-  ScriptureSource? _filter;
+/// Which message the home page shows: today's (the one the daily
+/// notification brought, or the day's pick), or another the user moved on
+/// to. Shared by the phone and desktop layouts.
+mixin TodaysMessage<T extends StatefulWidget> on State<T> {
+  ScriptureSource? filter;
 
   /// A quote the user moved on to; null shows today's message.
-  Quote? _browsed;
-  int _direction = 1;
+  Quote? browsed;
 
-  Quote _todays() {
+  /// Direction of the last change, so the card slides in from that side.
+  int direction = 1;
+
+  Quote todays() {
     final delivered = AppScope.of(context).library.todaysDelivery?.quote;
-    if (delivered != null && (_filter == null || delivered.source == _filter)) {
+    if (delivered != null && (filter == null || delivered.source == filter)) {
       return delivered;
     }
-    return dailyQuote(DateTime.now(), source: _filter);
+    return dailyQuote(DateTime.now(), source: filter);
   }
 
-  void _another([int direction = 1]) {
+  Quote get currentQuote => browsed ?? todays();
+
+  String get currentLabel => browsed == null
+      ? 'Today’s message'
+      : 'From ${browsed!.source.withArticle}';
+
+  void showAnother([int towards = 1]) {
     HapticFeedback.selectionClick();
     setState(() {
-      _direction = direction;
-      _browsed = randomQuote(source: _filter, excluding: _browsed ?? _todays());
+      direction = towards;
+      browsed = randomQuote(source: filter, excluding: currentQuote);
     });
   }
 
-  void _setFilter(ScriptureSource? source) {
-    if (source == _filter) return;
+  void setFilter(ScriptureSource? source) {
+    if (source == filter) return;
     HapticFeedback.selectionClick();
     setState(() {
-      _filter = source;
-      _browsed = null;
+      filter = source;
+      browsed = null;
     });
   }
+}
 
+class _HomeTabState extends State<HomeTab> with TodaysMessage {
   @override
   Widget build(BuildContext context) {
     final scope = AppScope.of(context);
@@ -61,7 +74,7 @@ class _HomeTabState extends State<HomeTab> {
     return ListenableBuilder(
       listenable: scope.library,
       builder: (context, _) {
-        final quote = _browsed ?? _todays();
+        final quote = currentQuote;
         final saved = scope.library.isSaved(quote);
         return ListView(
           padding: const EdgeInsets.only(bottom: 28),
@@ -81,17 +94,15 @@ class _HomeTabState extends State<HomeTab> {
               ),
             ),
             const SizedBox(height: 10),
-            _SourceTabs(selected: _filter, onSelected: _setFilter),
+            SourceTabs(selected: filter, onSelected: setFilter),
             const SizedBox(height: 14),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: _SwipeableCard(
                 quote: quote,
-                label: _browsed == null
-                    ? 'Today’s message'
-                    : 'From ${quote.source.withArticle}',
-                direction: _direction,
-                onSwipe: _another,
+                label: currentLabel,
+                direction: direction,
+                onSwipe: showAnother,
                 onTap: () => MessageScreen.open(context, quote),
               ),
             ),
@@ -131,7 +142,7 @@ class _HomeTabState extends State<HomeTab> {
             const SizedBox(height: 6),
             Center(
               child: TextButton.icon(
-                onPressed: _another,
+                onPressed: showAnother,
                 icon: const Icon(Icons.refresh_rounded, size: 20),
                 label: const Text('Show another message'),
               ),
@@ -139,7 +150,7 @@ class _HomeTabState extends State<HomeTab> {
             const SizedBox(height: 10),
             const Padding(
               padding: EdgeInsets.symmetric(horizontal: 20),
-              child: _ReminderStrip(),
+              child: ReminderStrip(),
             ),
           ],
         );
@@ -148,11 +159,18 @@ class _HomeTabState extends State<HomeTab> {
   }
 }
 
-class _SourceTabs extends StatelessWidget {
-  const _SourceTabs({required this.selected, required this.onSelected});
+/// All / Bible / Gita / Quran tabs.
+class SourceTabs extends StatelessWidget {
+  const SourceTabs({
+    super.key,
+    required this.selected,
+    required this.onSelected,
+    this.alignment = MainAxisAlignment.center,
+  });
 
   final ScriptureSource? selected;
   final ValueChanged<ScriptureSource?> onSelected;
+  final MainAxisAlignment alignment;
 
   @override
   Widget build(BuildContext context) {
@@ -193,7 +211,7 @@ class _SourceTabs extends StatelessWidget {
     }
 
     return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
+      mainAxisAlignment: alignment,
       children: [
         tab('All', null),
         for (final source in ScriptureSource.values) tab(source.shortLabel, source),
@@ -326,8 +344,9 @@ class MessageCard extends StatelessWidget {
   }
 }
 
-class _ReminderStrip extends StatelessWidget {
-  const _ReminderStrip();
+/// Daily-message status; opens its settings.
+class ReminderStrip extends StatelessWidget {
+  const ReminderStrip({super.key});
 
   @override
   Widget build(BuildContext context) {

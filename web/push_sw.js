@@ -91,7 +91,12 @@ async function cacheFirst(request) {
 }
 
 async function networkFirst(request, event) {
-  const network = fetch(request).then((response) => {
+  // Ask the server whether the file changed (a quick 304 if not) rather than
+  // trusting the browser's HTTP cache: GitHub Pages lets it keep files for
+  // 10 minutes, which would show the previous release after a deploy.
+  // (A navigation request can't be copied with options, hence the URL.)
+  const sameOrigin = new URL(request.url).origin === self.location.origin;
+  const network = (sameOrigin ? fetch(request.url, { cache: 'no-cache' }) : fetch(request)).then((response) => {
     event.waitUntil(putInCache(request, response.clone()));
     return response;
   });

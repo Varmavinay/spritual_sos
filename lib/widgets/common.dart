@@ -5,6 +5,16 @@ import 'package:share_plus/share_plus.dart';
 import '../models/quote.dart';
 import '../theme.dart';
 
+/// Screens at least this wide get the full desktop website; narrower ones
+/// get the phone layout.
+const desktopBreakpoint = 960.0;
+
+/// Content width of the desktop website.
+const desktopWidth = 1160.0;
+
+bool isDesktop(BuildContext context) =>
+    MediaQuery.sizeOf(context).width >= desktopBreakpoint;
+
 /// Top bar used by the tabs: an optional button on each side and a serif
 /// title, with an optional spaced subtitle underneath.
 class SosHeader extends StatelessWidget {

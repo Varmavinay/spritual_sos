@@ -43,11 +43,12 @@ Future<void> _pump(
   WidgetTester tester, {
   bool welcomed = true,
   ReminderAvailability availability = ReminderAvailability.available,
+  Size size = const Size(390, 844),
 }) async {
   SharedPreferences.setMockInitialValues({'welcome_seen': welcomed});
   settings = await SettingsStore.load();
   library = LibraryStore(settings.prefs);
-  tester.view.physicalSize = const Size(390, 844);
+  tester.view.physicalSize = size;
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.reset);
   await tester.pumpWidget(SpiritualSosApp(
@@ -166,6 +167,24 @@ void main() {
 
     expect(library.userName, 'Vinay');
     expect(find.text('Vinay'), findsOneWidget);
+  });
+
+  testWidgets('wide screens get the desktop website', (tester) async {
+    await _pump(tester, size: const Size(1440, 900));
+    expect(find.text('Wisdom from every tradition'), findsOneWidget);
+    expect(find.text('Home'), findsNothing); // No phone tab bar.
+
+    await tester.tap(find.text('Daily message'));
+    await tester.pumpAndSettle();
+    expect(find.text('FROM WHICH HOLY BOOK?'), findsOneWidget);
+    await tester.tap(find.text('The Quran').last);
+    await tester.tap(find.text('Turn on daily message'));
+    await tester.pumpAndSettle();
+    expect(settings.notificationSource, ScriptureSource.quran);
+
+    await tester.tap(find.text('Saved').first);
+    await tester.pumpAndSettle();
+    expect(find.text('Nothing saved yet'), findsOneWidget);
   });
 
   testWidgets('iPhone Safari explains Add to Home Screen', (tester) async {

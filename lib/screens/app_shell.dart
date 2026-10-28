@@ -2,9 +2,12 @@ import 'package:flutter/material.dart';
 
 import '../app_scope.dart';
 import '../data/quotes.dart';
+import '../services/notification_service.dart';
 import '../theme.dart';
 import '../widgets/common.dart';
+import '../widgets/illustrations.dart';
 import '../widgets/reminder_sheet.dart';
+import 'desktop_home.dart';
 import 'history_tab.dart';
 import 'home_tab.dart';
 import 'message_screen.dart';
@@ -72,6 +75,40 @@ class _AppShellState extends State<AppShell> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
+    final history = HistoryTab(
+      view: _historyView,
+      onViewChanged: (view) => setState(() => _historyView = view),
+    );
+    final profile = ProfileTab(
+      onOpenSaved: () => _select(1, view: HistoryView.saved),
+      onOpenReceived: () => _select(1, view: HistoryView.received),
+    );
+
+    if (isDesktop(context)) {
+      return Scaffold(
+        body: Column(
+          children: [
+            _TopBar(
+              tab: _tab,
+              historyView: _historyView,
+              onSelect: _select,
+              onReminder: () => showReminderSheet(context),
+            ),
+            Expanded(
+              child: IndexedStack(
+                index: _tab,
+                children: [
+                  DesktopHome(onOpenHistory: (view) => _select(1, view: view)),
+                  history,
+                  profile,
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
     return Scaffold(
       drawer: _Menu(
         onSelect: _select,
@@ -83,15 +120,157 @@ class _AppShellState extends State<AppShell> with WidgetsBindingObserver {
           index: _tab,
           children: [
             HomeTab(onOpenProfile: () => _select(2)),
-            HistoryTab(view: _historyView),
-            ProfileTab(
-              onOpenSaved: () => _select(1, view: HistoryView.saved),
-              onOpenReceived: () => _select(1, view: HistoryView.received),
-            ),
+            history,
+            profile,
           ],
         ),
       ),
       bottomNavigationBar: _NavBar(index: _tab, onSelect: _select),
+    );
+  }
+}
+
+/// Navigation bar across the top of the desktop website.
+class _TopBar extends StatelessWidget {
+  const _TopBar({
+    required this.tab,
+    required this.historyView,
+    required this.onSelect,
+    required this.onReminder,
+  });
+
+  final int tab;
+  final HistoryView historyView;
+  final void Function(int tab, {HistoryView? view}) onSelect;
+  final VoidCallback onReminder;
+
+  @override
+  Widget build(BuildContext context) {
+    final scope = AppScope.of(context);
+    final c = SosColors.of(context);
+
+    Widget link(String label, bool active, VoidCallback onTap) => Semantics(
+          selected: active,
+          button: true,
+          child: InkWell(
+            onTap: onTap,
+            borderRadius: BorderRadius.circular(8),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(label,
+                      style: TextStyle(
+                        fontSize: 15.5,
+                        fontWeight: active ? FontWeight.w600 : FontWeight.w400,
+                        color: active ? c.ink : c.muted,
+                      )),
+                  const SizedBox(height: 6),
+                  AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    width: active ? 20 : 0,
+                    height: 1.6,
+                    color: c.accent,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: c.paper,
+        border: Border(bottom: BorderSide(color: c.line)),
+      ),
+      child: SafeArea(
+        bottom: false,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 40),
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: desktopWidth),
+              child: SizedBox(
+                height: 80,
+                child: ListenableBuilder(
+                  listenable: Listenable.merge([scope.library, scope.notifications]),
+                  builder: (context, _) => Row(
+                    children: [
+                      InkWell(
+                        onTap: () => onSelect(0),
+                        borderRadius: BorderRadius.circular(8),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 8),
+                          child: Row(
+                            children: [
+                              CustomPaint(
+                                size: const Size(30, 24),
+                                painter: QuoteMarksPainter(c.accent),
+                              ),
+                              const SizedBox(width: 12),
+                              Text('Spiritual SOS',
+                                  style: serif(fontSize: 28, color: c.ink, height: 1)),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 24),
+                      // Shrinks rather than overflowing on narrow windows.
+                      Expanded(
+                        child: Align(
+                          alignment: Alignment.centerRight,
+                          child: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: Row(
+                              children: [
+                                link('Today', tab == 0, () => onSelect(0)),
+                                link('History',
+                                    tab == 1 && historyView == HistoryView.received,
+                                    () => onSelect(1, view: HistoryView.received)),
+                                link('Saved', tab == 1 && historyView == HistoryView.saved,
+                                    () => onSelect(1, view: HistoryView.saved)),
+                                link('Profile', tab == 2, () => onSelect(2)),
+                                const SizedBox(width: 20),
+                                if (scope.notifications.availability !=
+                                    ReminderAvailability.unsupported)
+                                  scope.notifications.enabled
+                                      ? OutlinedButton.icon(
+                                          onPressed: onReminder,
+                                          icon: Icon(Icons.notifications_active_rounded,
+                                              color: c.accent, size: 20),
+                                          label: Text(
+                                              'Daily · ${scope.notifications.time.format(context)}'),
+                                          style: OutlinedButton.styleFrom(
+                                              minimumSize: const Size(0, 46)),
+                                        )
+                                      : FilledButton.icon(
+                                          onPressed: onReminder,
+                                          icon: const Icon(Icons.notifications_none_rounded,
+                                              size: 20),
+                                          label: const Text('Daily message'),
+                                          style: FilledButton.styleFrom(
+                                              minimumSize: const Size(0, 46)),
+                                        ),
+                                const SizedBox(width: 16),
+                                IconButton(
+                                  tooltip: 'Profile',
+                                  onPressed: () => onSelect(2),
+                                  icon: Avatar(name: scope.library.userName, size: 42),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

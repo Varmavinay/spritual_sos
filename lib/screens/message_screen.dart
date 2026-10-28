@@ -1,16 +1,15 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 
 import '../app_scope.dart';
-import '../data/quotes.dart';
 import '../models/quote.dart';
 import '../theme.dart';
 import '../widgets/common.dart';
 import '../widgets/illustrations.dart';
+import '../widgets/reflection_box.dart';
 
-/// One message in full, with a place to write a reflection.
-class MessageScreen extends StatefulWidget {
+/// One message in full, with a place to write a reflection. On desktop the
+/// reflection sits beside the message.
+class MessageScreen extends StatelessWidget {
   const MessageScreen({super.key, required this.quote});
 
   final Quote quote;
@@ -21,43 +20,10 @@ class MessageScreen extends StatefulWidget {
       ));
 
   @override
-  State<MessageScreen> createState() => _MessageScreenState();
-}
-
-class _MessageScreenState extends State<MessageScreen> {
-  late final _library = AppScope.of(context).library;
-  late final _reflection =
-      TextEditingController(text: _library.reflection(widget.quote));
-  Timer? _saveTimer;
-
-  void _onReflectionChanged(String text) {
-    _saveTimer?.cancel();
-    _saveTimer = Timer(const Duration(milliseconds: 600),
-        () => _library.setReflection(widget.quote, text));
-  }
-
-  @override
-  void dispose() {
-    if (_saveTimer?.isActive ?? false) {
-      _saveTimer!.cancel();
-      // Save what was typed last, after this frame (listeners may rebuild).
-      final quote = widget.quote;
-      final text = _reflection.text;
-      scheduleMicrotask(() => _library.setReflection(quote, text));
-    }
-    _reflection.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
     final c = SosColors.of(context);
-    final quote = widget.quote;
-    final quoteSize = quote.text.length < 90
-        ? 32.0
-        : quote.text.length < 160
-            ? 28.0
-            : 25.0;
+    final library = AppScope.of(context).library;
+    final desktop = isDesktop(context);
 
     return Scaffold(
       appBar: AppBar(
@@ -76,9 +42,9 @@ class _MessageScreenState extends State<MessageScreen> {
             ),
           ),
           ListenableBuilder(
-            listenable: _library,
+            listenable: library,
             builder: (context, _) {
-              final saved = _library.isSaved(quote);
+              final saved = library.isSaved(quote);
               return IconButton(
                 tooltip: saved ? 'Remove from saved' : 'Save',
                 isSelected: saved,
@@ -87,13 +53,13 @@ class _MessageScreenState extends State<MessageScreen> {
                     color: c.accent,
                     size: 28),
                 onPressed: () {
-                  final now = _library.toggleSaved(quote);
+                  final now = library.toggleSaved(quote);
                   showSnack(context, now ? 'Saved' : 'Removed from saved');
                 },
               );
             },
           ),
-          const SizedBox(width: 6),
+          SizedBox(width: desktop ? 24 : 6),
         ],
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(1),
@@ -102,86 +68,93 @@ class _MessageScreenState extends State<MessageScreen> {
       ),
       body: GestureDetector(
         onTap: () => FocusScope.of(context).unfocus(),
-        child: ListView(
-          padding: EdgeInsets.fromLTRB(
-              24, 24, 24, 32 + MediaQuery.viewPaddingOf(context).bottom),
-          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-          children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.only(top: 6, right: 14),
-                  // Opening marks: the closing "99" shape turned upside down.
-                  child: RotatedBox(
-                    quarterTurns: 2,
-                    child: CustomPaint(
-                      size: const Size(30, 24),
-                      painter: QuoteMarksPainter(c.accent),
+        child: desktop
+            ? SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(40, 56, 40, 56),
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: desktopWidth),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(flex: 6, child: _Message(quote: quote, large: true)),
+                        const SizedBox(width: 64),
+                        Expanded(flex: 4, child: ReflectionBox(quote: quote)),
+                      ],
                     ),
                   ),
                 ),
-                Expanded(
-                  child: SelectableText(
-                    quote.text,
-                    style: serif(fontSize: quoteSize, color: c.ink, height: 1.28),
-                  ),
-                ),
-              ],
-            ),
-            Padding(
-              padding: const EdgeInsets.only(left: 44),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              )
+            : ListView(
+                padding: EdgeInsets.fromLTRB(
+                    24, 24, 24, 32 + MediaQuery.viewPaddingOf(context).bottom),
+                keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
                 children: [
-                  const SizedBox(height: 22),
-                  const AccentRule(width: 34),
-                  const SizedBox(height: 18),
-                  Text(quote.citation,
-                      style: TextStyle(fontSize: 16, color: c.ink, height: 1.4)),
-                  const SizedBox(height: 2),
-                  Text(quote.source.displayName,
-                      style: TextStyle(fontSize: 15, color: c.muted)),
+                  _Message(quote: quote),
+                  const SizedBox(height: 32),
+                  ReflectionBox(quote: quote),
                 ],
               ),
+      ),
+    );
+  }
+}
+
+class _Message extends StatelessWidget {
+  const _Message({required this.quote, this.large = false});
+
+  final Quote quote;
+  final bool large;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = SosColors.of(context);
+    final length = quote.text.length;
+    final size = (length < 90 ? 32.0 : length < 160 ? 28.0 : 25.0) * (large ? 1.4 : 1);
+    final indent = large ? 62.0 : 44.0;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: EdgeInsets.only(top: large ? 10 : 6, right: large ? 20 : 14),
+              // Opening marks: the closing "99" shape turned upside down.
+              child: RotatedBox(
+                quarterTurns: 2,
+                child: CustomPaint(
+                  size: large ? const Size(42, 34) : const Size(30, 24),
+                  painter: QuoteMarksPainter(c.accent),
+                ),
+              ),
             ),
-            const SizedBox(height: 32),
-            PaperCard(
-              color: c.blush,
-              padding: const EdgeInsets.fromLTRB(20, 18, 20, 20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Icon(Icons.eco_rounded, color: c.accent, size: 24),
-                      const SizedBox(width: 10),
-                      Text('Reflection', style: serif(fontSize: 24, color: c.ink)),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  Text(reflectionPrompt(quote),
-                      style: TextStyle(fontSize: 15.5, color: c.ink, height: 1.45)),
-                  const SizedBox(height: 14),
-                  TextField(
-                    controller: _reflection,
-                    onChanged: _onReflectionChanged,
-                    minLines: 3,
-                    maxLines: 8,
-                    textCapitalization: TextCapitalization.sentences,
-                    decoration: const InputDecoration(
-                      hintText: 'Write your thoughts…',
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text('Saved on this device only.',
-                      style: TextStyle(fontSize: 12.5, color: c.muted)),
-                ],
+            Expanded(
+              child: SelectableText(
+                quote.text,
+                style: serif(fontSize: size, color: c.ink, height: 1.25),
               ),
             ),
           ],
         ),
-      ),
+        Padding(
+          padding: EdgeInsets.only(left: indent),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 22),
+              const AccentRule(width: 34),
+              const SizedBox(height: 18),
+              Text(quote.citation,
+                  style: TextStyle(fontSize: large ? 18 : 16, color: c.ink, height: 1.4)),
+              const SizedBox(height: 2),
+              Text(quote.source.displayName,
+                  style: TextStyle(fontSize: large ? 16 : 15, color: c.muted)),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }

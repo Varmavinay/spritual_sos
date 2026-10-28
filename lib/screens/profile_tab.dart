@@ -50,42 +50,39 @@ class _ProfileTabState extends State<ProfileTab> {
       listenable: Listenable.merge([library, scope.notifications]),
       builder: (context, _) {
         final name = library.userName;
-        return ListView(
-          padding: const EdgeInsets.only(bottom: 32),
-          children: [
-            const SosHeader(title: 'Profile'),
-            const SizedBox(height: 18),
-            Center(child: Avatar(name: _editing ? _nameController.text : name, size: 96)),
-            const SizedBox(height: 16),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 32),
-              child: AnimatedSwitcher(
-                duration: const Duration(milliseconds: 200),
-                child: _editing ? _nameField(c) : _nameLabel(c, name),
-              ),
+        final identity = [
+          Center(child: Avatar(name: _editing ? _nameController.text : name, size: 96)),
+          const SizedBox(height: 16),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 32),
+            child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 200),
+              child: _editing ? _nameField(c) : _nameLabel(c, name),
             ),
-            const SizedBox(height: 28),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Row(
-                children: [
-                  _Stat(
-                    value: library.saved.length,
-                    label: 'Saved',
-                    onTap: widget.onOpenSaved,
-                  ),
-                  const SizedBox(width: 12),
-                  _Stat(
-                    value: library.history.length,
-                    label: 'Received',
-                    onTap: widget.onOpenReceived,
-                  ),
-                  const SizedBox(width: 12),
-                  _Stat(value: library.reflectionCount, label: 'Reflections'),
-                ],
-              ),
+          ),
+          const SizedBox(height: 28),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Row(
+              children: [
+                _Stat(
+                  value: library.saved.length,
+                  label: 'Saved',
+                  onTap: widget.onOpenSaved,
+                ),
+                const SizedBox(width: 12),
+                _Stat(
+                  value: library.history.length,
+                  label: 'Received',
+                  onTap: widget.onOpenReceived,
+                ),
+                const SizedBox(width: 12),
+                _Stat(value: library.reflectionCount, label: 'Reflections'),
+              ],
             ),
-            const SizedBox(height: 30),
+          ),
+        ];
+        final sections = [
             _Section(
               title: 'Settings',
               children: [
@@ -123,7 +120,52 @@ class _ProfileTabState extends State<ProfileTab> {
                 ),
               ],
             ),
-          ],
+        ];
+
+        if (!isDesktop(context)) {
+          return ListView(
+            padding: const EdgeInsets.only(bottom: 32),
+            children: [
+              const SosHeader(title: 'Profile'),
+              const SizedBox(height: 18),
+              ...identity,
+              const SizedBox(height: 30),
+              ...sections,
+            ],
+          );
+        }
+        return SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(40, 48, 40, 48),
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: desktopWidth),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('YOUR SPACE', style: eyebrow(c.muted, fontSize: 11.5)),
+                  const SizedBox(height: 10),
+                  Text('Profile', style: serif(fontSize: 44, color: c.ink, height: 1.1)),
+                  const SizedBox(height: 14),
+                  const AccentRule(width: 34),
+                  const SizedBox(height: 36),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        flex: 4,
+                        child: PaperCard(
+                          padding: const EdgeInsets.symmetric(vertical: 36),
+                          child: Column(children: identity),
+                        ),
+                      ),
+                      const SizedBox(width: 36),
+                      Expanded(flex: 6, child: Column(children: sections)),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
         );
       },
     );

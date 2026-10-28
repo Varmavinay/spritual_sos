@@ -7,6 +7,7 @@ import 'services/library_store.dart';
 import 'services/notification_service.dart';
 import 'services/settings_store.dart';
 import 'theme.dart';
+import 'widgets/common.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -46,17 +47,19 @@ class SpiritualSosApp extends StatelessWidget {
         debugShowCheckedModeBanner: false,
         theme: lightTheme,
         darkTheme: darkTheme,
-        // On tablets and desktop browsers, keep the phone-sized layout in a
-        // centred column.
-        builder: (context, child) => ColoredBox(
-          color: SosColors.of(context).paper,
-          child: Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 600),
-              child: child,
-            ),
-          ),
-        ),
+        // Wide screens get the full desktop website; on tablets the phone
+        // layout stays in a centred column.
+        builder: (context, child) => isDesktop(context)
+            ? child!
+            : ColoredBox(
+                color: SosColors.of(context).paper,
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 600),
+                    child: child,
+                  ),
+                ),
+              ),
         home: settings.welcomeSeen ? const AppShell() : const _FirstRun(),
       ),
     );
