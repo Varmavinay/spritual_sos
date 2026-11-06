@@ -2,7 +2,7 @@
 //
 //   GET  /vapid-public-key   -> { publicKey }
 //   POST /subscribe          { subscription, hour, minute, timeZone, source? }
-//                            source: "all" (default), "bible", "gita" or "quran"
+//                            source: "all" (default), "bible", "gita", "quran" or "granth"
 //   POST /unsubscribe        { endpoint }
 //   cron (every minute)      sends a quote to every subscription that is due
 import quotes from './quotes.json';

@@ -2,7 +2,8 @@ import 'dart:math';
 
 import '../models/quote.dart';
 
-/// 60 curated quotes: 20 each from the Bible, Bhagavad Gita and Quran.
+/// 80 curated quotes: 20 each from the Bible, the Bhagavad Gita, the Quran
+/// and the Guru Granth Sahib.
 const List<Quote> allQuotes = [
   // ─────────────── BIBLE (20) ───────────────
   Quote(id: 1, text: 'I can do all things through Christ who strengthens me.', source: ScriptureSource.bible, citation: 'Philippians 4:13'),
@@ -69,6 +70,29 @@ const List<Quote> allQuotes = [
   Quote(id: 58, text: 'It is He who sent down tranquillity into the hearts of the believers.', source: ScriptureSource.quran, citation: 'Surah Al-Fath 48:4'),
   Quote(id: 59, text: 'For indeed, with hardship will be ease. Indeed, with hardship will be ease.', source: ScriptureSource.quran, citation: 'Surah Ash-Sharh 94:5–6'),
   Quote(id: 60, text: 'And my success is not but through Allah. Upon Him I have relied, and to Him I return.', source: ScriptureSource.quran, citation: 'Surah Hud 11:88'),
+
+  // ─────────────── GURU GRANTH SAHIB (20) ───────────────
+  // "Ang" is the page of the Guru Granth Sahib.
+  Quote(id: 61, text: 'There is One Creator, whose Name is Truth: the maker of all, without fear, without hatred, beyond time, unborn, self-existent, known through the Guru’s grace.', source: ScriptureSource.granth, citation: 'Mool Mantar, Ang 1'),
+  Quote(id: 62, text: 'Truth is higher than everything, but higher still is living truthfully.', source: ScriptureSource.granth, citation: 'Sri Raag, Guru Nanak, Ang 62'),
+  Quote(id: 63, text: 'Conquer your own mind, and you conquer the world.', source: ScriptureSource.granth, citation: 'Japji Sahib, Pauri 28, Ang 6'),
+  Quote(id: 64, text: 'Air is the Guru, water the father, and the great earth the mother of all.', source: ScriptureSource.granth, citation: 'Japji Sahib, Salok, Ang 8'),
+  Quote(id: 65, text: 'Sweetness and humility, O Nanak, are the essence of every virtue and goodness.', source: ScriptureSource.granth, citation: 'Asa di Vaar, Guru Nanak, Ang 470'),
+  Quote(id: 66, text: 'Within all there is one Light, and that Light is the Divine.', source: ScriptureSource.granth, citation: 'Sohila, Guru Nanak, Ang 13'),
+  Quote(id: 67, text: 'No one is my enemy, and no one is a stranger; I am at peace with everyone.', source: ScriptureSource.granth, citation: 'Raag Kaanraa, Guru Arjan, Ang 1299'),
+  Quote(id: 68, text: 'O my mind, you are the very form of the Divine Light; recognise your own origin.', source: ScriptureSource.granth, citation: 'Raag Aasaa, Guru Amar Das, Ang 441'),
+  Quote(id: 69, text: 'Suffering has become the medicine, and comfort the disease.', source: ScriptureSource.granth, citation: 'Asa di Vaar, Guru Nanak, Ang 469'),
+  Quote(id: 70, text: 'One who earns by honest work and shares some of it with others — O Nanak, that one has found the path.', source: ScriptureSource.granth, citation: 'Vaar Saarang, Guru Nanak, Ang 1245'),
+  Quote(id: 71, text: 'Ego is a chronic illness, yet within it lies its own cure.', source: ScriptureSource.granth, citation: 'Asa di Vaar, Guru Angad, Ang 466'),
+  Quote(id: 72, text: 'First, Allah created the Light; then by His power He made all beings. From the One Light the whole world welled up — so who is good, and who is bad?', source: ScriptureSource.granth, citation: 'Bhagat Kabir, Ang 1349'),
+  Quote(id: 73, text: 'You are my father and You are my mother; You are my kin and my brother. You protect me everywhere, so why should I feel fear or worry?', source: ScriptureSource.granth, citation: 'Raag Maajh, Guru Arjan, Ang 103'),
+  Quote(id: 74, text: 'Why call her lesser, from whom kings are born?', source: ScriptureSource.granth, citation: 'Asa di Vaar, Guru Nanak, Ang 473'),
+  Quote(id: 75, text: 'The Guru’s word is the light in this world.', source: ScriptureSource.granth, citation: 'Sri Raag, Guru Amar Das, Ang 67'),
+  Quote(id: 76, text: 'Listening to the Name, sorrow and wrongdoing are washed away.', source: ScriptureSource.granth, citation: 'Japji Sahib, Pauri 8, Ang 2'),
+  Quote(id: 77, text: 'If you long to play this game of love, come to my path with your head in your hand.', source: ScriptureSource.granth, citation: 'Salok, Guru Nanak, Ang 1412'),
+  Quote(id: 78, text: 'Fareed, answer evil with goodness, and do not let anger fill your mind.', source: ScriptureSource.granth, citation: 'Salok, Baba Farid, Ang 1382'),
+  Quote(id: 79, text: 'Kings and emperors with oceans of wealth and lands cannot equal an ant whose heart never forgets God.', source: ScriptureSource.granth, citation: 'Japji Sahib, Pauri 23, Ang 5'),
+  Quote(id: 80, text: 'The jewel of peace is God’s nectar-sweet Name; it rests in the minds of the devoted.', source: ScriptureSource.granth, citation: 'Sukhmani Sahib, Guru Arjan, Ang 262'),
 ];
 
 final Random _random = Random();

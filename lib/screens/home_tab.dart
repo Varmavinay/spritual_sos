@@ -33,6 +33,14 @@ mixin TodaysMessage<T extends StatefulWidget> on State<T> {
   /// Direction of the last change, so the card slides in from that side.
   int direction = 1;
 
+  @override
+  void initState() {
+    super.initState();
+    // Start on the user's own holy book (all of them for no particular
+    // religion).
+    filter = context.getInheritedWidgetOfExactType<AppScope>()?.settings.faith?.book;
+  }
+
   Quote todays() {
     final delivered = AppScope.of(context).library.todaysDelivery?.quote;
     if (delivered != null && (filter == null || delivered.source == filter)) {
@@ -210,12 +218,22 @@ class SourceTabs extends StatelessWidget {
       );
     }
 
-    return Row(
-      mainAxisAlignment: alignment,
-      children: [
-        tab('All', null),
-        for (final source in ScriptureSource.values) tab(source.shortLabel, source),
-      ],
+    // Scrolls sideways on screens too narrow for all five tabs.
+    return LayoutBuilder(
+      builder: (context, box) => SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: ConstrainedBox(
+          constraints: BoxConstraints(minWidth: box.maxWidth),
+          child: Row(
+            mainAxisAlignment: alignment,
+            children: [
+              tab('All', null),
+              for (final source in ScriptureSource.values)
+                tab(source.shortLabel, source),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
@@ -330,7 +348,7 @@ class MessageCard extends StatelessWidget {
                   Padding(
                     padding: const EdgeInsets.only(right: 96),
                     child: Text(
-                      '${quote.citation}\n${quote.source.displayName}',
+                      '${keepPageTogether(quote.citation)}\n${quote.source.displayName}',
                       style: serif(fontSize: 18, color: c.muted, height: 1.35),
                     ),
                   ),

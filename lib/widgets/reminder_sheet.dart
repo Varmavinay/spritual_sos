@@ -36,7 +36,7 @@ Future<void> showReminderSheet(BuildContext context) {
 
 /// One-line summary such as "7:00 AM · Bhagavad Gita".
 String reminderSummary(BuildContext context, NotificationService service) {
-  final from = service.source?.displayName ?? 'All three';
+  final from = service.source?.displayName ?? 'All four';
   return '${service.time.format(context)} · $from';
 }
 
@@ -168,19 +168,20 @@ class _ReminderSheetState extends State<_ReminderSheet> {
         const SizedBox(height: 24),
         Text('FROM WHICH HOLY BOOK?', style: eyebrow(c.muted)),
         const SizedBox(height: 10),
-        _SourceOption(
-          title: 'All three',
+        ChoiceTile(
+          title: 'All four',
           subtitle: 'A different book each day, at random',
           selected: _source == null,
           onTap: _busy ? null : () => setState(() => _source = null),
         ),
         for (final source in ScriptureSource.values)
-          _SourceOption(
+          ChoiceTile(
             title: 'The ${source.displayName}',
             subtitle: switch (source) {
               ScriptureSource.bible => 'Psalms, Proverbs, the Gospels and more',
               ScriptureSource.gita => 'Krishna’s counsel to Arjuna',
               ScriptureSource.quran => 'Verses of mercy, patience and hope',
+              ScriptureSource.granth => 'Hymns of the Sikh Gurus and saints',
             },
             selected: _source == source,
             onTap: _busy ? null : () => setState(() => _source = source),
@@ -208,8 +209,10 @@ class _ReminderSheetState extends State<_ReminderSheet> {
   }
 }
 
-class _SourceOption extends StatelessWidget {
-  const _SourceOption({
+/// A selectable option card (used for the holy book and the faith).
+class ChoiceTile extends StatelessWidget {
+  const ChoiceTile({
+    super.key,
     required this.title,
     required this.subtitle,
     required this.selected,

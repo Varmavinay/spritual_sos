@@ -1,5 +1,6 @@
 import 'package:divine_quotes/data/quotes.dart';
 import 'package:divine_quotes/main.dart';
+import 'package:divine_quotes/models/faith.dart';
 import 'package:divine_quotes/models/quote.dart';
 import 'package:divine_quotes/services/library_store.dart';
 import 'package:divine_quotes/services/notification_service.dart';
@@ -44,8 +45,10 @@ Future<void> _pump(
   bool welcomed = true,
   ReminderAvailability availability = ReminderAvailability.available,
   Size size = const Size(390, 844),
+  String? faith = 'none',
 }) async {
-  SharedPreferences.setMockInitialValues({'welcome_seen': welcomed});
+  SharedPreferences.setMockInitialValues(
+      {'welcome_seen': welcomed, 'faith': ?faith});
   settings = await SettingsStore.load();
   library = LibraryStore(settings.prefs);
   tester.view.physicalSize = size;
@@ -79,16 +82,60 @@ void main() {
     throw details.exception;
   };
 
-  testWidgets('first launch shows the welcome screen, then today’s message',
+  testWidgets('first launch: welcome, faith question, then that faith’s message',
       (tester) async {
-    await _pump(tester, welcomed: false);
+    await _pump(tester, welcomed: false, faith: null);
     expect(find.text('Small words. A little more light.'), findsOneWidget);
 
     await tester.tap(find.text('Begin'));
     await tester.pumpAndSettle();
-    expect(find.text('TODAY’S MESSAGE'), findsOneWidget);
-    expect(find.text('Home'), findsOneWidget);
+    expect(find.text('Which path is yours?'), findsOneWidget);
+    expect(find.text('No particular religion'), findsOneWidget);
+
+    await _tapText(tester, 'Sikh');
+    await _tapText(tester, 'Continue');
+    await tester.pumpAndSettle();
+
     expect(settings.welcomeSeen, isTrue);
+    expect(settings.faith, Faith.sikh);
+    expect(settings.notificationSource, ScriptureSource.granth);
+    expect(find.text('TODAY’S MESSAGE'), findsOneWidget);
+    expect(find.text(dailyQuote(DateTime.now(), source: ScriptureSource.granth).text),
+        findsOneWidget);
+  });
+
+  testWidgets('the faith question is asked once, never again', (tester) async {
+    // Someone who used the app before the question existed.
+    await _pump(tester, faith: null);
+    expect(find.text('Which path is yours?'), findsOneWidget);
+    await _tapText(tester, 'Hindu');
+    await _tapText(tester, 'Continue');
+    await tester.pumpAndSettle();
+    expect(settings.faith, Faith.hindu);
+
+    // Next launch, same device.
+    await tester.pumpWidget(const SizedBox());
+    await tester.pumpWidget(SpiritualSosApp(
+      settings: settings,
+      library: library,
+      notifications: _FakeNotifications(settings, library, ReminderAvailability.available),
+    ));
+    await tester.pumpAndSettle();
+    expect(find.text('Which path is yours?'), findsNothing);
+    expect(find.text(dailyQuote(DateTime.now(), source: ScriptureSource.gita).text),
+        findsOneWidget);
+  });
+
+  testWidgets('the faith can be changed from the profile', (tester) async {
+    await _pump(tester);
+    await tester.tap(find.text('Profile'));
+    await tester.pumpAndSettle();
+    await _tapText(tester, 'Faith');
+    await tester.pumpAndSettle();
+    await _tapText(tester, 'Muslim');
+    await tester.pumpAndSettle();
+    expect(settings.faith, Faith.muslim);
+    expect(settings.notificationSource, ScriptureSource.quran);
   });
 
   testWidgets('saved messages show in History and on the profile',
@@ -119,7 +166,7 @@ void main() {
     await _tapText(tester, 'Get a daily message');
     await tester.pumpAndSettle();
     expect(find.text('FROM WHICH HOLY BOOK?'), findsOneWidget);
-    expect(find.text('All three'), findsOneWidget);
+    expect(find.text('All four'), findsOneWidget);
 
     await tester.tap(find.text('The Bhagavad Gita'));
     await tester.pumpAndSettle();
@@ -177,7 +224,11 @@ void main() {
     await tester.tap(find.text('Daily message'));
     await tester.pumpAndSettle();
     expect(find.text('FROM WHICH HOLY BOOK?'), findsOneWidget);
+    await tester.ensureVisible(find.text('The Quran').last);
+    await tester.pumpAndSettle();
     await tester.tap(find.text('The Quran').last);
+    await tester.ensureVisible(find.text('Turn on daily message'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Turn on daily message'));
     await tester.pumpAndSettle();
     expect(settings.notificationSource, ScriptureSource.quran);

@@ -2,7 +2,7 @@
 
 *Small words. A little more light.*
 
-A Flutter app for **Android, iOS and the web** with a daily message from the **Bible**, the **Bhagavad Gita** and the **Quran** (60 verses, 20 from each).
+A Flutter app for **Android, iOS and the web** with a daily message from the **Bible**, the **Bhagavad Gita**, the **Quran** and the **Guru Granth Sahib** (80 verses, 20 from each).
 
 Live website: https://varmavinay.github.io/spritual_sos/
 
@@ -10,21 +10,22 @@ Live website: https://varmavinay.github.io/spritual_sos/
 
 ## ✨ Features
 
-- **Welcome screen** on first launch, then three tabs: **Home**, **History** and **Profile**, plus a side menu.
+- **Welcome screen** on first launch, then a one-time question: **Christian, Hindu, Muslim, Sikh, or no particular religion**. It is asked only once per device and never again; the answer makes that holy book the default everywhere (Home, the desktop site and the daily notification). "No particular religion" uses all four books. It can be changed later under **Profile → Faith**.
+- Three tabs: **Home**, **History** and **Profile**, plus a side menu.
 - **Full desktop website** on screens 960 px and wider: a top navigation bar, today's message set large beside an illustration, reflection and daily-message panels, a section for each holy book, multi-column History and Profile pages, and a footer. Phones and tablets get the app layout.
-- **Today's message:** one verse a day (or the one your daily notification brought). Filter by **All / Bible / Gita / Quran**, swipe the card or tap **Show another message** for more.
+- **Today's message:** one verse a day (or the one your daily notification brought). Opens on your faith's book; filter by **All / Bible / Gita / Quran / Gurbani**, swipe the card or tap **Show another message** for more.
 - **Message page:** the full verse with its citation, **Save** (bookmark), **Share**, and a **Reflection** prompt with a note you can write. Notes stay on the device.
 - **Save** messages you love. Saved messages are kept on this device and listed under **History → Saved**.
 - **History → Received:** every daily message delivered to this device, newest first. Tap one to open it.
 - **Profile:** an editable name, counts of saved / received / reflections, and settings.
-- **Daily message** at the time you choose, from the **holy book you choose** (the Bible, the Bhagavad Gita, the Quran, or all three at random). It never fires the moment you turn it on. Tapping the notification opens that message.
+- **Daily message** at the time you choose, from the **holy book you choose** (your faith's book by default; any of the four, or all four at random). It never fires the moment you turn it on. Tapping the notification opens that message.
   - **Android / iOS apps:** scheduled with the OS for the next 30 days, each with a different quote, and topped up each time the app opens. On Android, reminders arrive on the exact minute when "Alarms & reminders" is allowed.
   - **Website:** uses **Web Push** through the small push server in [`push-server/`](push-server/), so messages arrive even when the site is closed. The service worker records each one for the history.
   - **iPhone / iPad website:** needs **iOS 16.4+** and the site **added to the Home Screen** (Share → Add to Home Screen). The app shows these steps when opened in Safari.
 - **Works offline** on the web after the first visit, and a new release shows the next time the site is opened.
 - **Light & dark theme** (warm paper and terracotta) that follows the system setting.
 
-Everything personal (name, saved messages, reflections, history) is stored only on the device. The push server only knows a browser's push address, its reminder time, time zone and chosen holy book.
+Everything personal (name, faith, saved messages, reflections, history) is stored only on the device. The push server only knows a browser's push address, its reminder time, time zone and chosen holy book.
 
 ---
 
@@ -131,7 +132,8 @@ lib/
 ├── app_scope.dart                    # Gives screens the stores and services
 ├── theme.dart                        # Paper & terracotta palette (light + dark), fonts
 ├── models/quote.dart                 # Quote + ScriptureSource
-├── data/quotes.dart                  # The 60 quotes, daily pick, reflection prompts
+├── models/faith.dart                 # Christian, Hindu, Muslim, Sikh, none
+├── data/quotes.dart                  # The 80 quotes, daily pick, reflection prompts
 ├── services/
 │   ├── settings_store.dart           # Reminder settings, welcome seen
 │   ├── library_store.dart            # Name, saved, reflections, history (on device)
@@ -140,6 +142,7 @@ lib/
 │   └── web_push/                     # Web Push client (web) + stub (mobile)
 ├── screens/                          # Phone layout, plus the desktop website
 │   ├── welcome_screen.dart
+│   ├── faith_screen.dart             # One-time religion question + Profile picker
 │   ├── app_shell.dart                # Phone tabs + side menu, desktop top bar
 │   ├── home_tab.dart                 # Today's message card (phone)
 │   ├── desktop_home.dart             # Home page of the desktop website

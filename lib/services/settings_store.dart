@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../models/faith.dart';
 import '../models/quote.dart';
 
-/// Preferences kept on this device: the daily reminder and
+/// Preferences kept on this device: the daily reminder, the user's faith and
 /// whether the welcome screen has been seen.
 class SettingsStore {
   SettingsStore(this.prefs);
@@ -13,6 +14,7 @@ class SettingsStore {
   static const _minuteKey = 'notification_minute';
   static const _sourceKey = 'notification_source';
   static const _welcomedKey = 'welcome_seen';
+  static const _faithKey = 'faith';
 
   final SharedPreferences prefs;
 
@@ -32,7 +34,7 @@ class SettingsStore {
         prefs.setInt(_minuteKey, time.minute),
       ]);
 
-  /// Which holy book reminders come from; null means all three at random.
+  /// Which holy book reminders come from; null means all four at random.
   ScriptureSource? get notificationSource =>
       ScriptureSource.fromName(prefs.getString(_sourceKey));
   Future<void> setNotificationSource(ScriptureSource? source) =>
@@ -40,4 +42,8 @@ class SettingsStore {
 
   bool get welcomeSeen => prefs.getBool(_welcomedKey) ?? false;
   Future<void> setWelcomeSeen() => prefs.setBool(_welcomedKey, true);
+
+  /// Chosen once, on first launch; null until then.
+  Faith? get faith => Faith.fromName(prefs.getString(_faithKey));
+  Future<void> setFaith(Faith value) => prefs.setString(_faithKey, value.name);
 }

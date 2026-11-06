@@ -8,6 +8,7 @@ import 'package:timezone/data/latest_all.dart' as tz_data;
 import 'package:timezone/timezone.dart' as tz;
 
 import '../data/quotes.dart';
+import '../models/faith.dart';
 import '../models/quote.dart';
 import 'library_store.dart';
 import 'reminder_types.dart';
@@ -60,7 +61,7 @@ class NotificationService extends ChangeNotifier {
   bool get enabled => _settings.notificationsEnabled;
   TimeOfDay get time => _settings.notificationTime;
 
-  /// The holy book reminders come from; null means all three at random.
+  /// The holy book reminders come from; null means all four at random.
   ScriptureSource? get source => _settings.notificationSource;
 
   /// Runs after the app is on screen; listeners are told if the saved
@@ -145,7 +146,7 @@ class NotificationService extends ChangeNotifier {
     await _writeScheduled(scheduled.where((d) => d.at.isAfter(now)));
   }
 
-  /// Turns reminders on for [time] from [source] (null: all three).
+  /// Turns reminders on for [time] from [source] (null: all four).
   /// Must be called directly from a tap (no `await` before it) so browsers
   /// allow the permission prompt.
   Future<PermissionResult> enable(TimeOfDay time, ScriptureSource? source) async {
@@ -190,6 +191,16 @@ class NotificationService extends ChangeNotifier {
     await _mobileInitDone;
     await _scheduleMobile();
     return true;
+  }
+
+  /// The faith chosen on first launch (or later on the profile).
+  Faith? get faith => _settings.faith;
+
+  /// Saves [value] and makes its holy book the default for daily messages,
+  /// updating reminders that are already on.
+  Future<bool> setFaith(Faith value) async {
+    await _settings.setFaith(value);
+    return update(time, value.book);
   }
 
   Future<PermissionResult> _enableMobile() async {

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'app_scope.dart';
 import 'screens/app_shell.dart';
+import 'screens/faith_screen.dart';
 import 'screens/welcome_screen.dart';
 import 'services/library_store.dart';
 import 'services/notification_service.dart';
@@ -60,27 +61,47 @@ class SpiritualSosApp extends StatelessWidget {
                   ),
                 ),
               ),
-        home: settings.welcomeSeen ? const AppShell() : const _FirstRun(),
+        home: !settings.welcomeSeen
+            ? const _Welcome()
+            : settings.faith == null
+                ? const _AskFaith()
+                : const AppShell(),
       ),
     );
   }
 }
 
-class _FirstRun extends StatelessWidget {
-  const _FirstRun();
+Route<void> _fadeTo(Widget page) => PageRouteBuilder(
+      transitionDuration: const Duration(milliseconds: 450),
+      pageBuilder: (_, _, _) => page,
+      transitionsBuilder: (_, animation, _, child) =>
+          FadeTransition(opacity: animation, child: child),
+    );
+
+/// First launch: the welcome screen, then the faith question.
+class _Welcome extends StatelessWidget {
+  const _Welcome();
 
   @override
   Widget build(BuildContext context) {
     return WelcomeScreen(
       onBegin: () {
         AppScope.of(context).settings.setWelcomeSeen();
-        Navigator.of(context).pushReplacement(PageRouteBuilder(
-          transitionDuration: const Duration(milliseconds: 450),
-          pageBuilder: (_, _, _) => const AppShell(),
-          transitionsBuilder: (_, animation, _, child) =>
-              FadeTransition(opacity: animation, child: child),
-        ));
+        Navigator.of(context).pushReplacement(_fadeTo(const _AskFaith()));
       },
+    );
+  }
+}
+
+/// Asked once; also shown to people who used the app before the question
+/// existed.
+class _AskFaith extends StatelessWidget {
+  const _AskFaith();
+
+  @override
+  Widget build(BuildContext context) {
+    return FaithScreen(
+      onDone: () => Navigator.of(context).pushReplacement(_fadeTo(const AppShell())),
     );
   }
 }

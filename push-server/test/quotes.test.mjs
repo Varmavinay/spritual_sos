@@ -7,14 +7,14 @@ import { pickQuote } from '../src/quotes.js';
 const quotes = JSON.parse(readFileSync(new URL('../src/quotes.json', import.meta.url), 'utf8'));
 
 test('quotes come from the chosen holy book', () => {
-  for (const book of ['bible', 'gita', 'quran']) {
+  for (const book of ['bible', 'gita', 'quran', 'granth']) {
     for (let i = 0; i < 50; i++) assert.equal(pickQuote(quotes, book).book, book);
   }
 });
 
 test('"all" and unknown values choose from every book', () => {
   const books = new Set();
-  for (let i = 0; i < 60; i++) books.add(pickQuote(quotes, 'all', () => i / 60).book);
-  assert.deepEqual([...books].sort(), ['bible', 'gita', 'quran']);
+  for (let i = 0; i < 80; i++) books.add(pickQuote(quotes, 'all', () => i / 80).book);
+  assert.deepEqual([...books].sort(), ['bible', 'gita', 'granth', 'quran']);
   assert.ok(pickQuote(quotes, 'unknown'));
 });

@@ -1,7 +1,8 @@
 enum ScriptureSource {
   bible('Bible', 'the Bible'),
   gita('Bhagavad Gita', 'the Bhagavad Gita'),
-  quran('Quran', 'the Quran');
+  quran('Quran', 'the Quran'),
+  granth('Guru Granth Sahib', 'the Guru Granth Sahib');
 
   const ScriptureSource(this.displayName, this.withArticle);
 
@@ -15,6 +16,7 @@ enum ScriptureSource {
         ScriptureSource.bible => 'Bible',
         ScriptureSource.gita => 'Gita',
         ScriptureSource.quran => 'Quran',
+        ScriptureSource.granth => 'Gurbani',
       };
 
   /// Parses [name]; anything else (including "all") means every scripture.

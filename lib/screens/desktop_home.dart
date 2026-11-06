@@ -12,7 +12,7 @@ import 'home_tab.dart';
 import 'message_screen.dart';
 
 /// The home page of the desktop website: today's message set large, the
-/// reflection and daily-message panels, the three books, and recent
+/// reflection and daily-message panels, the four books, and recent
 /// messages.
 class DesktopHome extends StatefulWidget {
   const DesktopHome({super.key, required this.onOpenHistory});
@@ -325,8 +325,8 @@ class _DailyMessagePanel extends StatelessWidget {
           Text('A message every day', style: serif(fontSize: 28, color: c.ink)),
           const SizedBox(height: 8),
           Text(
-            'Choose a time and a holy book (the Bible, the Bhagavad Gita, the '
-            'Quran, or all three), and a few words will arrive each day, even '
+            'Choose a time and a holy book (your own, or all four at random), '
+            'and a few words will arrive each day, even '
             'when this site is closed.',
             style: TextStyle(fontSize: 15, color: c.muted, height: 1.5),
           ),
@@ -348,22 +348,26 @@ class _Books extends StatelessWidget {
     ScriptureSource.bible: 'Psalms, Proverbs, the Gospels and the letters: words of hope, courage and rest.',
     ScriptureSource.gita: 'Krishna’s counsel to Arjuna on duty, the steady mind and letting go of results.',
     ScriptureSource.quran: 'Verses of mercy, patience and trust, and the promise that ease follows hardship.',
+    ScriptureSource.granth: 'Hymns of the Sikh Gurus and saints on the One Light in all, honest work, humility and service.',
   };
 
   @override
   Widget build(BuildContext context) {
     final c = SosColors.of(context);
     final today = DateTime.now();
+    // The user's own holy book first.
+    final own = AppScope.of(context).settings.faith?.book;
+    final books = [?own, ...ScriptureSource.values.where((s) => s != own)];
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const DesktopHeading(kicker: 'Three holy books', title: 'Wisdom from every tradition'),
+        const DesktopHeading(kicker: 'Four holy books', title: 'Wisdom from every tradition'),
         IntrinsicHeight(
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              for (final source in ScriptureSource.values) ...[
-                if (source != ScriptureSource.values.first) const SizedBox(width: 24),
+              for (final source in books) ...[
+                if (source != books.first) const SizedBox(width: 24),
                 Expanded(
                   child: PaperCard(
                     padding: const EdgeInsets.fromLTRB(26, 26, 26, 18),
@@ -386,7 +390,7 @@ class _Books extends StatelessWidget {
                         TextButton.icon(
                           onPressed: () => onReadMore(source),
                           icon: const Icon(Icons.arrow_forward_rounded, size: 18),
-                          label: Text('Read from the ${source.shortLabel}'),
+                          label: Text('More from ${source.withArticle}'),
                           style: TextButton.styleFrom(padding: EdgeInsets.zero),
                         ),
                       ],
@@ -478,7 +482,7 @@ class DesktopFooter extends StatelessWidget {
             right: 0,
             bottom: 18,
             child: Text(
-              '60 messages from the Bible, the Bhagavad Gita and the Quran · '
+              '80 messages from the Bible, the Bhagavad Gita, the Quran and the Guru Granth Sahib · '
               'Your name, saved messages and reflections stay on this device',
               textAlign: TextAlign.center,
               style: TextStyle(fontSize: 12.5, color: c.card),

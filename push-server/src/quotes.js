@@ -1,10 +1,10 @@
 // Choosing which quote to send.
 
 /** Values the app may send as `source`: one holy book, or "all". */
-export const BOOKS = ['all', 'bible', 'gita', 'quran'];
+export const BOOKS = ['all', 'bible', 'gita', 'quran', 'granth'];
 
 /**
- * A random quote from `book` ("bible", "gita", "quran"), or from all three
+ * A random quote from `book` ("bible", "gita", "quran", "granth"), or from all four
  * for "all" or anything unknown.
  */
 export function pickQuote(quotes, book, random = Math.random) {

@@ -4,6 +4,7 @@ import '../app_scope.dart';
 import '../theme.dart';
 import '../widgets/common.dart';
 import '../widgets/reminder_sheet.dart';
+import 'faith_screen.dart';
 
 /// The user's name, a few numbers and settings.
 class ProfileTab extends StatefulWidget {
@@ -87,6 +88,12 @@ class _ProfileTabState extends State<ProfileTab> {
               title: 'Settings',
               children: [
                 _Row(
+                  icon: Icons.spa_outlined,
+                  title: 'Faith',
+                  value: scope.notifications.faith?.label ?? 'Not set',
+                  onTap: () => showFaithPicker(context),
+                ),
+                _Row(
                   icon: scope.notifications.enabled
                       ? Icons.notifications_active_rounded
                       : Icons.notifications_none_rounded,
@@ -112,9 +119,9 @@ class _ProfileTabState extends State<ProfileTab> {
                   padding: const EdgeInsets.fromLTRB(18, 16, 18, 18),
                   child: Text(
                     'Small words. A little more light.\n\n'
-                    '60 messages from the Bible, the Bhagavad Gita and the '
-                    'Quran. Your name, saved messages and reflections are '
-                    'kept on this device only.',
+                    '80 messages from the Bible, the Bhagavad Gita, the Quran '
+                    'and the Guru Granth Sahib. Your name, faith, saved messages '
+                    'and reflections are kept on this device only.',
                     style: TextStyle(fontSize: 14.5, color: c.muted, height: 1.5),
                   ),
                 ),

@@ -4,11 +4,11 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   test('has 20 quotes per scripture with unique ids', () {
-    expect(allQuotes, hasLength(60));
+    expect(allQuotes, hasLength(80));
     for (final source in ScriptureSource.values) {
       expect(quotesBySource(source), hasLength(20));
     }
-    expect(allQuotes.map((q) => q.id).toSet(), hasLength(60));
+    expect(allQuotes.map((q) => q.id).toSet(), hasLength(80));
   });
 
   test('randomQuote respects the filter and avoids repeats', () {

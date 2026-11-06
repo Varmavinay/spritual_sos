@@ -200,6 +200,10 @@ Future<void> shareQuote(BuildContext origin, Quote quote) async {
   }
 }
 
+/// Keeps a page reference such as "Ang 62" on one line.
+String keepPageTogether(String citation) => citation.replaceAllMapped(
+    RegExp('Ang ([0-9])'), (m) => 'Ang${String.fromCharCode(0xA0)}${m[1]}');
+
 /// "Today, 7:00 AM", "Yesterday, 7:00 AM" or "Mon 12 Oct, 7:00 AM".
 String friendlyDateTime(BuildContext context, DateTime at) {
   final now = DateTime.now();
